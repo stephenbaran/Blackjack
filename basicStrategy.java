@@ -1,22 +1,14 @@
-import java.util.Scanner;
-import java.io.File;
-import java.util.ArrayList;
-import java.io.IOException;
 import java.io.*;
 import java.util.*;
 
 public class basicStrategy {
-    private ArrayList<String> player = new ArrayList<String>();
-    private ArrayList<String> dealer = new ArrayList<String>();
+    private Hand player = new Hand();
+    private DealerHand dealer = new DealerHand();
+
     private ArrayList<String> deck = new ArrayList<String>();
-    private String currentCard;
-    private String clear;
-    private String ANSI_reset, ANSI_green, ANSI_red;
-    private int playerTotal, dealerTotal;
-    private boolean playerHandHard, dealerHandHard, playerCanDouble;
-    private int nDecks, nDraws;
-    private int nChoices, nCorrect;
-    private boolean playerTurn;
+
+    private String ANSI_reset, ANSI_green, ANSI_red, clear;
+
     private String nonAce;
 
     private HashMap<String, String> pairSplittingTable;
@@ -24,13 +16,10 @@ public class basicStrategy {
     private HashMap<String, String> hardTotalTable;
     private HashMap<String, String> surrenderTable;
 
-    private ArrayList<String> tempArr;
-
     public static void main(String[] args) throws IOException {
         basicStrategy game = new basicStrategy();
         game.shuffle();
         game.playRound();
-
     }
 
     public basicStrategy() {
@@ -38,13 +27,6 @@ public class basicStrategy {
         ANSI_reset = "\033[0m";
         ANSI_green = "\033[42m";
         ANSI_red = "\033[41m";
-        nDecks = 1;
-        nDraws = 0;
-        nChoices = 0;
-        nCorrect = 0;
-        playerTurn = true;
-        playerHandHard = true;
-        dealerHandHard = true;
 
         pairSplittingTable = new HashMap<String, String>();
         readInfoIntoMap(pairSplittingTable, "pairSplittingTable");
@@ -64,76 +46,47 @@ public class basicStrategy {
     public void shuffle() throws IOException {
         deck.clear();
         Scanner deckInput = new Scanner(
-                new File("C://Users//Steph//OneDrive//Desktop//VS Projects//Blackjack//src//oneDeck.txt"));
-        for (int x = 1; x <= nDecks * 52; x++) {
+
+                new File("C://Users//poken//Documents//GitHub//Blackjack//oneDeck.txt"));
+        for (int x = 1; x <= 52; x++) {
             deck.add(deckInput.nextLine());
         }
         deckInput.close();
-        nDraws = 0;
-    }
-
-    public void play() {
-
     }
 
     public void deal() {
-        player.clear();
-        dealer.clear();
+        player = new Hand();
+        dealer = new DealerHand();
 
-        playerHandHard = true;
-        dealerHandHard = true;
-        playerTotal = 0;
-        dealerTotal = 0;
         draw(player);
         draw(dealer);
         draw(player);
         draw(dealer);
     }
 
-    public void draw(ArrayList<String> input) {
+    public void draw(Hand input) {
         int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
-        input.add(deck.get(randomDraw));
+        input.addCardToHand(deck.get(randomDraw));
 
         if (isNumeric(deck.get(randomDraw))) {
-            if (input == player) {
-                playerTotal += Double.parseDouble(deck.get(randomDraw));
-            } else {
-                dealerTotal += Double.parseDouble(deck.get(randomDraw));
-                ;
-            }
+            input.addTotal(Integer.parseInt(deck.get(randomDraw)));
         } else {
-            if (input == player) {
-                if (!deck.get(randomDraw).equals("A")) {
-                    playerTotal += 10;
-                } else if (playerTotal + 11 > 21) {
-                    playerTotal += 1;
-                } else {
-                    playerTotal += 11;
-                    playerHandHard = false;
-                }
+            if (!deck.get(randomDraw).equals("A")) {
+                input.addTotal(10);
+            } else if (input.getTotal() + 11 > 21) {
+                input.addTotal(1);
             } else {
-                if (!deck.get(randomDraw).equals("A")) {
-                    dealerTotal += 10;
-                } else if (dealerTotal + 11 > 21) {
-                    dealerTotal += 1;
-                } else {
-                    dealerTotal += 11;
-                    dealerHandHard = false;
-                }
+                input.addTotal(11);
+                input.makeHandSoft();
             }
         }
 
-        if (!playerHandHard && playerTotal > 21) {
-            playerTotal -= 10;
-            playerHandHard = true;
-        }
-        if (!dealerHandHard && dealerTotal > 21) {
-            dealerTotal -= 10;
-            dealerHandHard = true;
+        if (!player.getHandHardness() && player.getTotal() > 21) {
+            player.subtractTotal(10);
+            input.makeHandHard();
         }
 
         deck.remove(randomDraw);
-        ++nDraws;
     }
 
     public static boolean isNumeric(String strNum) {
@@ -148,153 +101,83 @@ public class basicStrategy {
         return true;
     }
 
-    public void draw() throws IOException {
-        int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
-        if (playerTurn == true) {
-            player.add(deck.get(randomDraw));
-            deck.remove(randomDraw);
-        } else {
-            dealer.add(deck.get(randomDraw));
-            deck.remove(randomDraw);
-        }
-        ++nDraws;
-        // it's really only shuffled after the round is finished so this needs to be
-        // moved somewhere else
-        if (nDraws > 0.75 * nDecks * 52) {
-            // 75% is a guess for when the deck is shuffled
-            shuffle();
-        }
-    }
-
-    
-
-    public int choiceAccuracy(String choice) {
-
-        // for(int x = 0; x < player.size(); x++) {
-        //     tempArr.add(player.get(x));
-        //     if (!isNumeric(player.get(x)) && !player.get(x).equals("A")) player.set(x, "T");
-        // }
-
-        if (player.get(0).equals(player.get(1)) && player.size() == 2) {
-            if (player.get(0).equals("A") || player.get(0).equals("8")) {
-                if (choice.equals("split")) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+    public String choiceAccuracy(Hand playerHand, DealerHand dealerHand) {
+        if (playerHand.get(0).equals(playerHand.get(1)) && playerHand.size() == 2) {
+            if (playerHand.get(0).equals("A") || playerHand.get(0).equals("8")) {
+                return "split";
             }
-            if(!player.get(0).equals("5") && isNumeric(player.get(0))) {
-                if (pairSplittingTable.get(player.get(0) + "," + dealer.get(1)).equals("D")) {
-                    if (choice.equals("split"))
-                        return 1;
-                    else
-                        return 0;
+            if (!playerHand.get(0).equals("5") && isNumeric(playerHand.get(0))) {
+                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard()).equals("D")) {
+                    return "split";
                 }
 
-                if (pairSplittingTable.get(player.get(0) + "," + dealer.get(1)).equals("Y")) {
-                    if(choice.equals("split")) return 1;
-                    else return 0;
+                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard()).equals("Y")) {
+                    return "split";
                 }
             }
         }
 
-        if (!playerHandHard) {
-            nonAce = Integer.toString(playerTotal - 11);
+        if (!playerHand.getHandHardness()) {
+            nonAce = Integer.toString(playerHand.getTotal() - 11);
 
             if (nonAce.equals("9") || nonAce.equals("10")) {
-                if (choice.equals("stand"))
-                    return 1;
-                else
-                    return 0;
+                return "stand";
             }
 
-            if (choice.equals("double") && (softTotalTable.get(nonAce + "," + dealer.get(1)).equals("DS")
-                    || softTotalTable.get(nonAce + "," + dealer.get(1)).equals("D")))
-                return 1;
+            if (playerHand.getCanDouble()
+                    && (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("DS")
+                            || softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("D")))
+                return "double";
 
-            if (softTotalTable.get(nonAce + "," + dealer.get(1)).equals("H")) {
-                if (choice.equals("hit"))
-                    return 1;
-                else
-                    return 0;
+            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("H")) {
+                return "hit";
             }
 
-            if (softTotalTable.get(nonAce + "," + dealer.get(1)).equals("S")) {
-                if (choice.equals("stand"))
-                    return 1;
-                else
-                    return 0;
+            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("S")) {
+                return "stand";
             }
 
-            if (playerCanDouble)
-                return 0;
-            else if (choice.equals("hit") && softTotalTable.get(nonAce + "," + dealer.get(1)).equals("D"))
-                return 1;
-            else if (choice.equals("stand") && softTotalTable.get(nonAce + "," + dealer.get(1)).equals("DS"))
-                return 1;
-            else
-                return 0;
+            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("D"))
+                return "hit";
+            else if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("DS"))
+                return "stand";
 
         } else {
-            if (playerTotal >= 17) {
-                if (choice.equals("stand"))
-                    return 1;
-                else
-                    return 0;
-            } else if (playerTotal <= 8) {
-                if (choice.equals("hit"))
-                    return 1;
-                else
-                    return 0;
+            if (playerHand.getTotal() >= 17) {
+                return "stand";
+            } else if (playerHand.getTotal() <= 8) {
+                return "hit";
             }
 
-            if (playerTotal == 11) {
-                if (playerCanDouble) {
-                    if (choice.equals("double"))
-                        return 1;
-                    else
-                        return 0;
+            if (playerHand.getTotal() == 11) {
+                if (player.getCanDouble()) {
+                    return "double";
                 } else {
-                    if (choice.equals("hit"))
-                        return 1;
-                    else
-                        return 0;
+                    return "hit";
                 }
             }
 
-            if (hardTotalTable.get(playerTotal + "," + dealer.get(1)).equals("S")) {
-                if (choice.equals("stand"))
-                    return 1;
-                else
-                    return 0;
+            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("S")) {
+                return "stand";
             }
 
-            if (hardTotalTable.get(playerTotal + "," + dealer.get(1)).equals("H")) {
-                if (choice.equals("hit"))
-                    return 1;
-                else
-                    return 0;
+            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("H")) {
+                return "hit";
             }
 
-            if (hardTotalTable.get(playerTotal + "," + dealer.get(1)).equals("D")) {
-                if (playerCanDouble) {
-                    if (choice.equals("double"))
-                        return 1;
-                    else
-                        return 0;
+            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("D")) {
+                if (player.getCanDouble()) {
+                    return "double";
                 } else {
-                    if (choice.equals("hit"))
-                        return 1;
-                    else
-                        return 0;
+                    return "hit";
                 }
             }
         }
-        return -1;
+        return "-1";
     }
 
-    public int surrenderAccurance(boolean didSurrender) {
-        if (surrenderTable.get(playerTotal + "," + dealer.get(1)).equals("Y")) {
+    public int surrenderAccurance(boolean didSurrender, Hand playerHand, DealerHand dealerHand) {
+        if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("Y")) {
             if (didSurrender)
                 return 1;
             else
@@ -311,7 +194,7 @@ public class basicStrategy {
         String[] inputs;
         try {
             File myObj = new File(
-                    "C://Users//Steph//OneDrive//Desktop//VS Projects//Blackjack//src//" + mapName + ".txt");
+                    "C://Users//poken//Documents//GitHub//Blackjack//" + mapName + ".txt");
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
@@ -328,96 +211,171 @@ public class basicStrategy {
     String playerChoice = "null";
     Scanner playerInput = new Scanner(System.in);
 
-    public void playerTurn() throws IOException {
-        System.out.println("Enter Choice (hit, stand, split, double, surrender):");
-        playerChoice = playerInput.nextLine();
-        if (playerChoice.equalsIgnoreCase("hit") || playerChoice.equalsIgnoreCase("h")) {
-            if (correctAction() == "hit")
-                System.out.println(ANSI_green + "CORRECT" + ANSI_reset);
-            else {
-                System.out.println(ANSI_red + "INCORRECT, should have " + correctAction() + ANSI_reset);
-            }
-        } else if (playerChoice.equalsIgnoreCase("stand") || playerChoice.equalsIgnoreCase("s")) {
-            if (correctAction() == "stand")
-                System.out.println(ANSI_green + "CORRECT" + ANSI_reset);
-            else {
-                System.out.println(ANSI_red + "INCORRECT, should have " + correctAction() + ANSI_reset);
-            }
-        } else if (playerChoice.equalsIgnoreCase("split") || playerChoice.equalsIgnoreCase("sp")) {
-            if (correctAction() == "split")
-                System.out.println(ANSI_green + "CORRECT" + ANSI_reset);
-            else {
-                System.out.println(ANSI_red + "INCORRECT, should have " + correctAction() + ANSI_reset);
-            }
-        } else if (playerChoice.equalsIgnoreCase("double") || playerChoice.equalsIgnoreCase("d")) {
-            if (correctAction() == "double")
-                System.out.println(ANSI_green + "CORRECT" + ANSI_reset);
-            else {
-                System.out.println(ANSI_red + "INCORRECT, should have " + correctAction() + ANSI_reset);
-            }
-        } else if (playerChoice.equalsIgnoreCase("surrender") || playerChoice.equalsIgnoreCase("sur")) {
-
-        } else {
-            System.out.println("type something real bro");
-        }
-
+    public String lengthen(String input) {
+        if (input.equals("h"))
+            return "hit";
+        if (input.equals("s"))
+            return "stand";
+        if (input.equals("sp"))
+            return "split";
+        if (input.equals("d"))
+            return "double";
+        if (input.equals("s"))
+            return "surrender";
+        return input;
     }
 
-    public String correctAction() {
-        if (choiceAccuracy("split") == 1) {
-            if (pairSplittingTable.get(player.get(0) + "," + dealer.get(1)).equals("D")) {
-                return "split ONLY if double after split";
+    public boolean validate(Hand inputHand, String input) {
+        if (input.equals("hit") || input.equals("stand"))
+            return true;
+        if (inputHand.getCanDouble() && input.equals("double"))
+            return true;
+        if (inputHand.getCanSplit() && input.equals("split"))
+            return true;
+        return false;
+    }
+
+    public void playerTurn() throws IOException {
+        printHands(false);
+
+        if (player.getTotal() >= 21) {
+
+        } else {
+
+            System.out.println("Enter Choice (hit, stand, split, double, surrender):");
+            playerChoice = lengthen(playerInput.nextLine());
+
+            if (validate(player, playerChoice)) {
+
+                if (playerChoice.equals(choiceAccuracy(player, dealer))) {
+                    System.out.println(ANSI_green + "CORRECT" + ANSI_reset);
+                } else {
+                    System.out.println(
+                            ANSI_red + "INCORRECT, should have " + choiceAccuracy(player, dealer) + ANSI_reset);
+                }
+
+                if (player.getCanDouble() && playerChoice.equals("double")) {
+                    draw(player);
+                }
+
+                player.setCanDouble(false);
+
+                if (playerChoice.equals("hit")) {
+                    draw(player);
+                    playerTurn();
+                }
+
+                if (player.getCanSplit() && playerChoice.equals("split")) {
+                    // playSplit(player.get(0), dealer);
+                }
+
             } else {
-                return "split";
+                System.out.println("type something real bro");
+                playerTurn();
             }
-        } else if (choiceAccuracy("double") == 1) {
-            return "double";
-        } else if (choiceAccuracy("hit") == 1)
-            return "hit";
-        else if (choiceAccuracy("stand") == 1)
-            return "stand";
-        else
-            return "IDK";
+
+        }
     }
 
     public void dealerTurn() {
-        if (dealerHandHard == true) {
-            if (dealerTotal < 17) {
-                // dealer hits
-            } else {
-                // dealer stands
+        printHands(true);
+        if (dealer.getHandHardness()) {
+            if (dealer.getTotal() < 17) {
+                draw(dealer);
+                dealerTurn();
             }
         } else {
-            if (dealerTotal <= 17) {
-                // dealer hits
-            } else {
-                // dealer stands
+            if (dealer.getTotal() <= 17) {
+                draw(dealer);
+                dealerTurn();
             }
         }
     }
 
-    private boolean isRoundOver;
+    private void evaluateRound(Hand playerHand, DealerHand dealerHand) {
+
+        System.out.println("ROUND OVER");
+        System.out.println("Your total " + playerHand.getTotal());
+        System.out.println("House total " + dealerHand.getTotal());
+
+        if (playerHand.getTotal() > 21)
+            System.out.println(ANSI_red + "YOU LOSE" + ANSI_reset);
+        else if (dealerHand.getTotal() > 21)
+            System.out.println(ANSI_green + "YOU WIN" + ANSI_reset);
+        else {
+            if (playerHand.getTotal() > dealerHand.getTotal()) {
+                System.out.println(ANSI_green + "YOU WIN" + ANSI_reset);
+            } else if (playerHand.getTotal() == dealerHand.getTotal()) {
+                System.out.println(ANSI_red + "DRAW" + ANSI_reset);
+            } else {
+                System.out.println(ANSI_red + "YOU LOSE" + ANSI_reset);
+            }
+        }
+    }
 
     public void playRound() {
-        isRoundOver = false;
+
         this.deal();
 
-        System.out.println(ANSI_green + "DEALER: " + dealer.get(1) + ANSI_reset);
-        System.out.println(ANSI_green + "YOU: " + player.get(0) + " " + player.get(1) + ANSI_reset);
+        player.checkIfHandCanSplit();
 
-        playerCanDouble = true;
+        try {
+            player.setCanDouble(true);
+            playerTurn();
 
-        while (!isRoundOver) {
-            try {
-                playerTurn();
-            } catch (IOException e) {
-                System.out.println(e);
-            }
-            isRoundOver = true;
+            if (player.getTotal() <= 21)
+                dealerTurn();
+            else
+                printHands(true);
+
+            evaluateRound(player, dealer);
+
+            System.out.println("---------------------------");
+
+            this.playRound();
+
+        } catch (IOException e) {
+            System.out.println(e);
         }
 
-        this.playRound();
+    }
 
+    String temp;
+
+    private void printHands(boolean canSeeDealer) {
+        if (canSeeDealer) {
+            temp = ANSI_green + "DEALER: ";
+            for (int x = 0; x < dealer.size(); x++)
+                temp += dealer.get(x) + " ";
+            temp += ANSI_reset;
+            System.out.println(temp);
+        } else {
+            System.out.println(ANSI_green + "DEALER: " + dealer.get(1) + ANSI_reset);
+        }
+
+        temp = ANSI_green + "YOU: ";
+        for (int x = 0; x < player.size(); x++)
+            temp += player.get(x) + " ";
+        temp += ANSI_reset;
+        System.out.println(temp);
     }
 
 }
+
+// public void draw() throws IOException {
+// int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
+// if (playerTurn == true) {
+// player.add(deck.get(randomDraw));
+// deck.remove(randomDraw);
+// } else {
+// dealer.add(deck.get(randomDraw));
+// deck.remove(randomDraw);
+// }
+// ++nDraws;
+// // it's really only shuffled after the round is finished so this needs to be
+// // moved somewhere else
+// if (nDraws > 0.75 * nDecks * 52) {
+// // 75% is a guess for when the deck is shuffled
+// shuffle();
+// }
+// }
