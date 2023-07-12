@@ -137,6 +137,12 @@ public class basicStrategy {
                 return "stand";
             }
 
+            if (playerHand.getTotal() <= 17 && playerHand.getTotal() >= 14) {
+                if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
+                    return "surrender";
+                }
+            }
+
             if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("H")) {
                 return "hit";
             }
@@ -146,12 +152,6 @@ public class basicStrategy {
                     return "double";
                 } else {
                     return "hit";
-                }
-            }
-
-            if (playerHand.getTotal() <= 17 && playerHand.getTotal() >= 14) {
-                if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
-                    return "surrender";
                 }
             }
         }
