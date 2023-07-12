@@ -268,7 +268,7 @@ public class basicStrategy {
         }
     }
 
-    private void evaluateRound(Hand playerHand, DealerHand dealerHand) {
+    private void evaluateRound(Hand playerHand, DealerHand dealerHand) throws IOException {
 
         System.out.println("ROUND OVER");
         System.out.println("Your total " + playerHand.getTotal());
@@ -286,6 +286,9 @@ public class basicStrategy {
             } else {
                 System.out.println(ANSI_red + "YOU LOSE" + ANSI_reset);
             }
+        }
+        if (deck.size() < 0.75 * 52) {
+            shuffle();
         }
     }
 
