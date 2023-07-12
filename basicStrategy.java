@@ -5,7 +5,7 @@ public class basicStrategy {
     private Hand player = new Hand();
     private DealerHand dealer = new DealerHand();
 
-    private ArrayList<String> deck = new ArrayList<String>();
+    private ArrayList<Card> deck = new ArrayList<Card>();
 
     private String ANSI_reset, ANSI_green, ANSI_red, clear;
 
@@ -46,10 +46,9 @@ public class basicStrategy {
     public void shuffle() throws IOException {
         deck.clear();
         Scanner deckInput = new Scanner(
-
                 new File("C://Users//poken//Documents//GitHub//Blackjack//oneDeck.txt"));
         for (int x = 1; x <= 52; x++) {
-            deck.add(deckInput.nextLine());
+            deck.add(new Card(deckInput.nextLine()));
         }
         deckInput.close();
     }
@@ -62,51 +61,24 @@ public class basicStrategy {
         draw(dealer);
         draw(player);
         draw(dealer);
+
+        player.checkIfHandCanSplit();
+        dealer.checkIfHandCanSplit();
     }
 
     public void draw(Hand input) {
         int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
         input.addCardToHand(deck.get(randomDraw));
-
-        if (isNumeric(deck.get(randomDraw))) {
-            input.addTotal(Integer.parseInt(deck.get(randomDraw)));
-        } else {
-            if (!deck.get(randomDraw).equals("A")) {
-                input.addTotal(10);
-            } else if (input.getTotal() + 11 > 21) {
-                input.addTotal(1);
-            } else {
-                input.addTotal(11);
-                input.makeHandSoft();
-            }
-        }
-
-        if (!player.getHandHardness() && player.getTotal() > 21) {
-            player.subtractTotal(10);
-            input.makeHandHard();
-        }
-
         deck.remove(randomDraw);
     }
 
-    public static boolean isNumeric(String strNum) {
-        if (strNum == null) {
-            return false;
-        }
-        try {
-            double d = Double.parseDouble(strNum);
-        } catch (NumberFormatException nfe) {
-            return false;
-        }
-        return true;
-    }
-
     public String choiceAccuracy(Hand playerHand, DealerHand dealerHand) {
-        if (playerHand.get(0).equals(playerHand.get(1)) && playerHand.size() == 2) {
+        if (playerHand.getCanSplit()) {
             if (playerHand.get(0).equals("A") || playerHand.get(0).equals("8")) {
                 return "split";
             }
-            if (!playerHand.get(0).equals("5") && isNumeric(playerHand.get(0))) {
+
+            if (!playerHand.get(0).equals("5") && !playerHand.getCard(0).isTen) {
                 if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard()).equals("D")) {
                     return "split";
                 }
@@ -118,7 +90,11 @@ public class basicStrategy {
         }
 
         if (!playerHand.getHandHardness()) {
+            System.out.println("appears that hand is soft" + playerHand.getHandHardness());
             nonAce = Integer.toString(playerHand.getTotal() - 11);
+
+            if (nonAce.equals("1"))
+                return "hit";
 
             if (nonAce.equals("9") || nonAce.equals("10")) {
                 return "stand";
@@ -353,11 +329,15 @@ public class basicStrategy {
             System.out.println(ANSI_green + "DEALER: " + dealer.get(1) + ANSI_reset);
         }
 
+        System.out.println(dealer.getTotal());
+
         temp = ANSI_green + "YOU: ";
         for (int x = 0; x < player.size(); x++)
             temp += player.get(x) + " ";
         temp += ANSI_reset;
         System.out.println(temp);
+
+        System.out.println(player.getTotal());
     }
 
 }
