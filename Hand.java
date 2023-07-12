@@ -5,7 +5,7 @@ public class Hand {
     private ArrayList<Card> hand;
     private int total;
 
-    private boolean isHandHard, canHandSplit, canHandDouble;
+    private boolean isHandHard, canHandSplit, canHandDouble, canHandSurrender;
     private boolean neverSplitAgain;
 
     public Hand() {
@@ -15,6 +15,7 @@ public class Hand {
         canHandSplit = false;
         canHandDouble = true;
         neverSplitAgain = false;
+        canHandSurrender = true;
     }
 
     public boolean getCanDouble() {
@@ -33,6 +34,10 @@ public class Hand {
         return isHandHard;
     }
 
+    public boolean getCanSurrender() {
+        return canHandSurrender;
+    }
+
     public void checkIfHandCanSplit() {
         if (hand.get(0).isAce && hand.get(1).isAce)
             canHandSplit = true;
@@ -49,6 +54,10 @@ public class Hand {
     }
 
     public void addCardToHand(Card card) {
+
+        if (hand.size() == 2) {
+            canHandSurrender = false;
+        }
 
         if (card.isAce && total + 11 > 21)
             card.downgradeAce();
