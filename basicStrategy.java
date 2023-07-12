@@ -79,18 +79,18 @@ public class basicStrategy {
             }
 
             if (!playerHand.get(0).equals("5") && !playerHand.getCard(0).isTen) {
-                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard()).equals("D")) {
+                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard().value).equals("D")) {
                     return "split";
                 }
 
-                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard()).equals("Y")) {
+                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard().value).equals("Y")) {
                     return "split";
                 }
             }
         }
 
         if (!playerHand.getHandHardness()) {
-            System.out.println("appears that hand is soft" + playerHand.getHandHardness());
+
             nonAce = Integer.toString(playerHand.getTotal() - 11);
 
             if (nonAce.equals("1"))
@@ -101,21 +101,21 @@ public class basicStrategy {
             }
 
             if (playerHand.getCanDouble()
-                    && (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("DS")
-                            || softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("D")))
+                    && (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("DS")
+                            || softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("D")))
                 return "double";
 
-            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("H")) {
+            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("H")) {
                 return "hit";
             }
 
-            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("S")) {
+            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("S")) {
                 return "stand";
             }
 
-            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("D"))
+            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("D"))
                 return "hit";
-            else if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard()).equals("DS"))
+            else if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("DS"))
                 return "stand";
 
         } else {
@@ -133,15 +133,15 @@ public class basicStrategy {
                 }
             }
 
-            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("S")) {
+            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("S")) {
                 return "stand";
             }
 
-            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("H")) {
+            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("H")) {
                 return "hit";
             }
 
-            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("D")) {
+            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("D")) {
                 if (player.getCanDouble()) {
                     return "double";
                 } else {
@@ -153,7 +153,7 @@ public class basicStrategy {
     }
 
     public int surrenderAccurance(boolean didSurrender, Hand playerHand, DealerHand dealerHand) {
-        if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard()).equals("Y")) {
+        if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
             if (didSurrender)
                 return 1;
             else

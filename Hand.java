@@ -36,7 +36,7 @@ public class Hand {
     public void checkIfHandCanSplit() {
         if (hand.get(0).isAce && hand.get(1).isAce)
             canHandSplit = true;
-        if (!hand.get(0).isTen && hand.get(1).isTen)
+        if (hand.get(0).isTen && hand.get(1).isTen)
             canHandSplit = true;
         if (hand.get(0).numValue == hand.get(1).numValue)
             canHandSplit = true;
