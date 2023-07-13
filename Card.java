@@ -24,4 +24,8 @@ public class Card {
     public void downgradeAce() {
         numValue = 1;
     }
+
+    public void upgradeAce() {
+        numValue = 11;
+    }
 }

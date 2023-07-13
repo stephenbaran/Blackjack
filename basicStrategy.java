@@ -5,6 +5,8 @@ public class basicStrategy {
     private Hand player = new Hand();
     private DealerHand dealer = new DealerHand();
 
+    private Stack<Hand> alternatePlayerHands;
+
     private ArrayList<Card> deck = new ArrayList<Card>();
 
     private String ANSI_reset, ANSI_green, ANSI_red, clear;
@@ -36,6 +38,8 @@ public class basicStrategy {
         readInfoIntoMap(hardTotalTable, "hardTotalTable");
         surrenderTable = new HashMap<String, String>();
         readInfoIntoMap(surrenderTable, "surrenderTable");
+
+        alternatePlayerHands = new Stack<Hand>();
     }
 
     public void modeSelection() {
@@ -211,59 +215,73 @@ public class basicStrategy {
         return false;
     }
 
-    public void playerTurn() throws IOException {
-        printHands(false);
+    Hand tempHand;
 
-        if (player.getTotal() >= 21) {
+    public void playerTurn(Hand playerHand, DealerHand dealerHand) throws IOException {
+        printHands(playerHand, dealerHand, false);
+
+        if (playerHand.getTotal() >= 21) {
 
         } else {
 
             System.out.println("Enter Choice (hit, stand, split, double, surrender):");
             playerChoice = lengthen(playerInput.nextLine());
 
-            if (validate(player, playerChoice)) {
+            if (validate(playerHand, playerChoice)) {
 
-                if (playerChoice.equals(choiceAccuracy(player, dealer))) {
+                if (playerChoice.equals(choiceAccuracy(playerHand, dealerHand))) {
                     System.out.println(ANSI_green + "CORRECT" + ANSI_reset);
                 } else {
                     System.out.println(
-                            ANSI_red + "INCORRECT, should have " + choiceAccuracy(player, dealer) + ANSI_reset);
+                            ANSI_red + "INCORRECT, should have " + choiceAccuracy(playerHand, dealerHand) + ANSI_reset);
                 }
 
-                if (player.getCanDouble() && playerChoice.equals("double")) {
-                    draw(player);
+                if (playerHand.getCanDouble() && playerChoice.equals("double")) {
+                    draw(playerHand);
                 }
-
-                player.setCanDouble(false);
 
                 if (playerChoice.equals("hit")) {
-                    draw(player);
-                    playerTurn();
+                    draw(playerHand);
+                    playerTurn(playerHand, dealerHand);
                 }
 
-                if (player.getCanSplit() && playerChoice.equals("split")) {
-                    // playSplit(player.get(0), dealer);
+                if (playerHand.getCanSplit() && playerChoice.equals("split")) {
+
+                    playerHand.splitHand();
+
+                    for (int x = 0; x < 2; x++) {
+                        tempHand = new Hand(playerHand.getNumTimesSplit() + 1);
+                        tempHand.addCardToHand(playerHand.getCard(x));
+                        draw(tempHand);
+
+                        tempHand.checkIfHandCanSplit();
+
+                        alternatePlayerHands.add(tempHand);
+
+                        clearSplits();
+                    }
                 }
 
             } else {
                 System.out.println("type something real bro");
-                playerTurn();
+                playerTurn(playerHand, dealerHand);
             }
 
         }
     }
 
-    public void dealerTurn() {
-        printHands(true);
-        if (dealer.getHandHardness()) {
-            if (dealer.getTotal() < 17) {
-                draw(dealer);
-                dealerTurn();
+    public void dealerTurn(Hand playerHand, DealerHand dealerHand) {
+        printHands(playerHand, dealerHand, true);
+
+        if (dealerHand.getHandHardness()) {
+            if (dealerHand.getTotal() < 17) {
+                draw(dealerHand);
+                dealerTurn(playerHand, dealerHand);
             }
         } else {
-            if (dealer.getTotal() <= 17) {
-                draw(dealer);
-                dealerTurn();
+            if (dealerHand.getTotal() <= 17) {
+                draw(dealerHand);
+                dealerTurn(playerHand, dealerHand);
             }
         }
     }
@@ -298,23 +316,82 @@ public class basicStrategy {
 
         player.checkIfHandCanSplit();
 
-        try {
-            player.setCanDouble(true);
-            playerTurn();
+        if (player.getTotal() == 21 || dealer.getTotal() == 21) {
 
-            if (player.getTotal() <= 21)
-                dealerTurn();
-            else
-                printHands(true);
+            if (player.getTotal() == 21 && dealer.getTotal() == 21) {
+                System.out.println("DOUBLE BLACKJACK, TIE");
+            } else if (player.getTotal() == 21) {
+                System.out.println("BLACKJACK!, YOU WIN");
+            } else {
+                System.out.println("DEALER BLACKJACK, YOU LOSE");
+            }
 
-            evaluateRound(player, dealer);
+            printHands(player, dealer, true);
 
             System.out.println("---------------------------");
 
             this.playRound();
+        } else {
 
-        } catch (IOException e) {
-            System.out.println(e);
+            try {
+
+                playerTurn(player, dealer);
+
+                if (!player.getIfHandWasSplit()) {
+
+                    if (player.getTotal() <= 21)
+                        dealerTurn(player, dealer);
+                    else
+                        printHands(true);
+
+                    evaluateRound(player, dealer);
+
+                    System.out.println("---------------------------");
+
+                }
+
+                this.playRound();
+
+            } catch (IOException e) {
+                System.out.println(e);
+            }
+        }
+    }
+
+    private int splitHands;
+
+    public void clearSplits() {
+
+        System.out.println("---------------------------");
+
+        splitHands = 1;
+
+        while (alternatePlayerHands.size() > 0) {
+            System.out.println(ANSI_red + "SPLIT HAND " + splitHands + ANSI_reset);
+            splitHands++;
+
+            tempHand = alternatePlayerHands.pop();
+
+            // NEED TO CHECK FOR BLACKJACKS HERE
+
+            try {
+                playerTurn(tempHand, dealer);
+
+                if (!tempHand.getIfHandWasSplit()) {
+
+                    if (tempHand.getTotal() <= 21)
+                        dealerTurn(tempHand, dealer);
+                    else
+                        printHands(tempHand, dealer, true);
+
+                    evaluateRound(tempHand, tempDealerHand);
+
+                    System.out.println("---------------------------");
+                }
+
+            } catch (IOException e) {
+                System.out.println(e);
+            }
         }
 
     }
@@ -341,6 +418,28 @@ public class basicStrategy {
         System.out.println(temp);
 
         System.out.println(player.getTotal());
+    }
+
+    private void printHands(Hand playerHand, DealerHand dealerHand, boolean canSeeDealer) {
+        if (canSeeDealer) {
+            temp = ANSI_green + "DEALER: ";
+            for (int x = 0; x < dealerHand.size(); x++)
+                temp += dealerHand.get(x) + " ";
+            temp += ANSI_reset;
+            System.out.println(temp);
+        } else {
+            System.out.println(ANSI_green + "DEALER: " + dealer.get(1) + ANSI_reset);
+        }
+
+        System.out.println(dealerHand.getTotal());
+
+        temp = ANSI_green + "YOU: ";
+        for (int x = 0; x < playerHand.size(); x++)
+            temp += playerHand.get(x) + " ";
+        temp += ANSI_reset;
+        System.out.println(temp);
+
+        System.out.println(playerHand.getTotal());
     }
 
 }

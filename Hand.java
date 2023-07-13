@@ -3,30 +3,51 @@ import java.util.ArrayList;
 public class Hand {
 
     private ArrayList<Card> hand;
-    private int total;
+    private int total, numTimesSplit;
 
-    private boolean isHandHard, canHandSplit, canHandDouble;
-    private boolean neverSplitAgain;
+    private boolean isHandHard, canHandSplit;
+    private boolean wasHandSplit;
 
     public Hand() {
         hand = new ArrayList<Card>();
         total = 0;
         isHandHard = true;
         canHandSplit = false;
-        canHandDouble = true;
-        neverSplitAgain = false;
+        wasHandSplit = false;
+        numTimesSplit = 0;
+    }
+
+    public Hand(int timesSplit) {
+        hand = new ArrayList<Card>();
+        total = 0;
+        isHandHard = true;
+        canHandSplit = false;
+        wasHandSplit = true;
+        numTimesSplit = timesSplit;
+    }
+
+    public void splitHand() {
+        wasHandSplit = true;
+
+        if (this.getCard(0).isAce) {
+            hand.get(1).upgradeAce();
+        }
+    }
+
+    public boolean getIfHandWasSplit() {
+        return wasHandSplit;
+    }
+
+    public int getNumTimesSplit() {
+        return numTimesSplit;
     }
 
     public boolean getCanDouble() {
-        return canHandDouble;
+        return hand.size() <= 2;
     }
 
     public boolean getCanSplit() {
         return canHandSplit;
-    }
-
-    public void setCanDouble(boolean input) {
-        canHandDouble = input;
     }
 
     public boolean getHandHardness() {
@@ -40,7 +61,7 @@ public class Hand {
             canHandSplit = true;
         if (hand.get(0).numValue == hand.get(1).numValue)
             canHandSplit = true;
-        if (neverSplitAgain)
+        if (numTimesSplit >= 2)
             canHandSplit = false;
     }
 
@@ -96,9 +117,5 @@ public class Hand {
 
     public int size() {
         return hand.size();
-    }
-
-    public void cannotSplitAgain() {
-        neverSplitAgain = true;
     }
 }
