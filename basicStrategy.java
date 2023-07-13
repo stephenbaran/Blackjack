@@ -392,7 +392,7 @@ public class basicStrategy {
                     else
                         printHands(tempHand, dealer, true);
 
-                    evaluateRound(tempHand, tempDealerHand);
+                    evaluateRound(tempHand, dealer);
 
                     System.out.println("---------------------------");
                 }
