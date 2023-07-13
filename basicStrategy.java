@@ -50,7 +50,7 @@ public class basicStrategy {
     public void shuffle() throws IOException {
         deck.clear();
         Scanner deckInput = new Scanner(
-                new File("C://Users//poken//Documents//GitHub//Blackjack//oneDeck.txt"));
+                new File("C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack//oneDeck.txt"));
         for (int x = 1; x <= 52; x++) {
             deck.add(new Card(deckInput.nextLine()));
         }
@@ -141,6 +141,12 @@ public class basicStrategy {
                 return "stand";
             }
 
+            if (playerHand.getTotal() <= 17 && playerHand.getTotal() >= 14) {
+                if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
+                    return "surrender";
+                }
+            }
+
             if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("H")) {
                 return "hit";
             }
@@ -174,7 +180,7 @@ public class basicStrategy {
         String[] inputs;
         try {
             File myObj = new File(
-                    "C://Users//poken//Documents//GitHub//Blackjack//" + mapName + ".txt");
+                    "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack//" + mapName + ".txt");
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
@@ -200,7 +206,7 @@ public class basicStrategy {
             return "split";
         if (input.equals("d"))
             return "double";
-        if (input.equals("s"))
+        if (input.equals("sur"))
             return "surrender";
         return input;
     }
@@ -211,6 +217,8 @@ public class basicStrategy {
         if (inputHand.getCanDouble() && input.equals("double"))
             return true;
         if (inputHand.getCanSplit() && input.equals("split"))
+            return true;
+        if (inputHand.getCanSurrender() && input.equals("surrender"))
             return true;
         return false;
     }
