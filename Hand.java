@@ -15,6 +15,7 @@ public class Hand {
         canHandSplit = false;
         wasHandSplit = false;
         numTimesSplit = 0;
+        canHandSurrender = true;
     }
 
     public Hand(int timesSplit) {

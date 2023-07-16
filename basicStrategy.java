@@ -42,11 +42,6 @@ public class basicStrategy {
         alternatePlayerHands = new Stack<Hand>();
     }
 
-    public void modeSelection() {
-        // gonna leave this until i actually want different modes
-        // might want to choose number of decks here
-    }
-
     public void shuffle() throws IOException {
         deck.clear();
         Scanner deckInput = new Scanner(
@@ -141,7 +136,7 @@ public class basicStrategy {
                 return "stand";
             }
 
-            if (playerHand.getTotal() <= 17 && playerHand.getTotal() >= 14) {
+            if (playerHand.getCanSurrender() && playerHand.getTotal() <= 17 && playerHand.getTotal() >= 14) {
                 if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
                     return "surrender";
                 }
@@ -160,20 +155,6 @@ public class basicStrategy {
             }
         }
         return "-1";
-    }
-
-    public int surrenderAccurance(boolean didSurrender, Hand playerHand, DealerHand dealerHand) {
-        if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
-            if (didSurrender)
-                return 1;
-            else
-                return 0;
-        } else {
-            if (didSurrender)
-                return 0;
-            else
-                return 1;
-        }
     }
 
     public void readInfoIntoMap(HashMap<String, String> inputMap, String mapName) {
@@ -452,20 +433,3 @@ public class basicStrategy {
 
 }
 
-// public void draw() throws IOException {
-// int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
-// if (playerTurn == true) {
-// player.add(deck.get(randomDraw));
-// deck.remove(randomDraw);
-// } else {
-// dealer.add(deck.get(randomDraw));
-// deck.remove(randomDraw);
-// }
-// ++nDraws;
-// // it's really only shuffled after the round is finished so this needs to be
-// // moved somewhere else
-// if (nDraws > 0.75 * nDecks * 52) {
-// // 75% is a guess for when the deck is shuffled
-// shuffle();
-// }
-// }
