@@ -308,10 +308,12 @@ public class basicStrategy {
                 System.out.println(ANSI_red + "YOU LOSE" + ANSI_reset);
             }
         }
-        System.out.println("the count was " + count);
+        System.out.println("the count is " + count);
         if (deck.size() < 0.3 * 52) {
             shuffle();
             count = 0;
+            System.out.println("deck shuffled");
+            System.out.println("count is reset to " + count);
         }
     }
 
