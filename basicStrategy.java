@@ -75,7 +75,7 @@ public class basicStrategy {
 
         int numValue = deck.get(randomDraw).numValue;
 
-        if (numValue > 9) {
+        if (numValue > 9 || numValue == 1) {
             count--;
         }
         else if (numValue < 7) {
@@ -309,7 +309,7 @@ public class basicStrategy {
             }
         }
         System.out.println("the count was " + count);
-        if (deck.size() < 0.75 * 52) {
+        if (deck.size() < 0.3 * 52) {
             shuffle();
             count = 0;
         }
@@ -334,6 +334,8 @@ public class basicStrategy {
             printHands(player, dealer, true);
 
             System.out.println("---------------------------");
+
+            System.out.println(count);
 
             System.out.println();
 
