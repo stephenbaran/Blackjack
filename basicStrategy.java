@@ -13,6 +13,8 @@ public class basicStrategy {
 
     private String nonAce;
 
+    private int count;
+
     private HashMap<String, String> pairSplittingTable;
     private HashMap<String, String> softTotalTable;
     private HashMap<String, String> hardTotalTable;
@@ -40,6 +42,8 @@ public class basicStrategy {
         readInfoIntoMap(surrenderTable, "surrenderTable");
 
         alternatePlayerHands = new Stack<Hand>();
+
+        count = 0;
     }
 
     public void shuffle() throws IOException {
@@ -68,6 +72,16 @@ public class basicStrategy {
     public void draw(Hand input) {
         int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
         input.addCardToHand(deck.get(randomDraw));
+
+        int numValue = deck.get(randomDraw).numValue;
+
+        if (numValue > 9) {
+            count--;
+        }
+        else if (numValue < 7) {
+            count++;
+        }
+        
         deck.remove(randomDraw);
     }
 
@@ -294,8 +308,10 @@ public class basicStrategy {
                 System.out.println(ANSI_red + "YOU LOSE" + ANSI_reset);
             }
         }
+        System.out.println("the count was " + count);
         if (deck.size() < 0.75 * 52) {
             shuffle();
+            count = 0;
         }
     }
 
@@ -318,6 +334,8 @@ public class basicStrategy {
             printHands(player, dealer, true);
 
             System.out.println("---------------------------");
+
+            System.out.println();
 
             this.playRound();
         } else {
