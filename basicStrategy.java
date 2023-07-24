@@ -318,6 +318,8 @@ public class basicStrategy {
     }
 
     public void playRound() {
+        //allow player to control when next hand is dealt
+        // playerInput.nextLine();
 
         this.deal();
 
