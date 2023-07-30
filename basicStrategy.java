@@ -245,6 +245,7 @@ public class basicStrategy {
 
                 if (playerChoice.equals("hit")) {
                     draw(playerHand);
+                    playerHand.checkIfHandCanSplit();
                     playerTurn(playerHand, dealerHand);
                 }
 
