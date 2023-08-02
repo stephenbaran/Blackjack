@@ -13,6 +13,10 @@ public class basicStrategy {
 
     private String nonAce;
 
+    private String deckType;
+
+    private int numDecks;
+
     private int count;
 
     private HashMap<String, String> pairSplittingTable;
@@ -20,8 +24,11 @@ public class basicStrategy {
     private HashMap<String, String> hardTotalTable;
     private HashMap<String, String> surrenderTable;
 
+    Scanner playerInput = new Scanner(System.in);
+
     public static void main(String[] args) throws IOException {
         basicStrategy game = new basicStrategy();
+        game.chooseDeckType();
         game.shuffle();
         game.playRound();
     }
@@ -46,11 +53,29 @@ public class basicStrategy {
         count = 0;
     }
 
+    public void chooseDeckType() {
+        System.out.println("1 deck is not used in casinos");
+        System.out.println("2 deck is fairly common in casinos");
+        System.out.println("6 deck is very common in casinos");
+        System.out.println("Enter deck size (1,2, or 6):");
+        numDecks = playerInput.nextInt();
+        if (numDecks == 1) {
+            deckType = "oneDeck";
+        }
+        if (numDecks == 2) {
+            deckType = "twoDeck";
+        }
+        if (numDecks == 6) {
+            deckType = "sixDeck";
+        }
+    }
+
     public void shuffle() throws IOException {
+        //isnt really a shuffle but whatever
         deck.clear();
         Scanner deckInput = new Scanner(
-                new File("C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack//oneDeck.txt"));
-        for (int x = 1; x <= 52; x++) {
+                new File("C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/deckTypes/" + deckType + ".txt"));
+        for (int x = 1; x <= 52 * numDecks; x++) {
             deck.add(new Card(deckInput.nextLine()));
         }
         deckInput.close();
@@ -175,7 +200,7 @@ public class basicStrategy {
         String[] inputs;
         try {
             File myObj = new File(
-                    "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack//" + mapName + ".txt");
+                    "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/tables/" + mapName + ".txt");
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
@@ -190,7 +215,6 @@ public class basicStrategy {
     }
 
     String playerChoice = "null";
-    Scanner playerInput = new Scanner(System.in);
 
     public String lengthen(String input) {
         if (input.equals("h"))
@@ -310,6 +334,7 @@ public class basicStrategy {
             }
         }
         System.out.println("the count is " + count);
+        // make different for each deck type
         if (deck.size() < 0.3 * 52) {
             shuffle();
             count = 0;
