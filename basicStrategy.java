@@ -54,9 +54,9 @@ public class basicStrategy {
     }
 
     public void chooseDeckType() {
-        System.out.println("1 deck is not used in casinos");
-        System.out.println("2 deck is fairly common in casinos");
-        System.out.println("6 deck is very common in casinos");
+        System.out.println("1 deck can be used in casinos but usually with unfair rules");
+        System.out.println("2 deck is fairly common in casinos but sometimes has unfair rules");
+        System.out.println("6 deck is very common in casinos and usually has good rules");
         System.out.println("Enter deck size (1,2, or 6):");
         numDecks = playerInput.nextInt();
         if (numDecks == 1) {
@@ -334,11 +334,25 @@ public class basicStrategy {
             }
         }
         System.out.println("the count is " + count);
-        // make different for each deck type
-        if (deck.size() < 0.3 * 52) {
+        
+        if (numDecks == 2 && deck.size() < 0.4 * 52 * 2) {
             shuffle();
             count = 0;
-            System.out.println("deck shuffled");
+            System.out.println("deck shuffled (double deck)");
+            System.out.println("count is reset to " + count);
+        }
+
+        else if (numDecks == 6 && deck.size() < 0.3 * 52 * 6) {
+            shuffle();
+            count = 0;
+            System.out.println("deck shuffled (six deck)");
+            System.out.println("count is reset to " + count);
+        }
+
+        else if (numDecks == 1 && deck.size() < 0.5 * 52 * 1) {
+            shuffle();
+            count = 0;
+            System.out.println("deck shuffled (single deck)");
             System.out.println("count is reset to " + count);
         }
     }
