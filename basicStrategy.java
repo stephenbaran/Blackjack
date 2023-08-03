@@ -2,222 +2,66 @@ import java.io.*;
 import java.util.*;
 
 public class basicStrategy {
-    private Hand player = new Hand();
-    private DealerHand dealer = new DealerHand();
 
-    private Stack<Hand> alternatePlayerHands;
+    private String fileLocation = "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/";
+    //private String fileLocation = "C://Users//poken//Documents//GitHub//Blackjack/";
 
-    private ArrayList<Card> deck = new ArrayList<Card>();
+    private Player player;
+    private Dealer dealer;
+    private Referee ref;
+    private Printer printOut;
+    private Deck deck;
 
-    private String ANSI_reset, ANSI_green, ANSI_red, clear;
-
-    private String nonAce;
-
-    private String deckType;
-
-    // private String fileLocation =
-    // "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/";
-    private String fileLocation = "C://Users//poken//Documents//GitHub//Blackjack/";
-
+    Scanner playerInput;
+    
     private int numDecks;
-
-    private int count;
-
-    private HashMap<String, String> pairSplittingTable;
-    private HashMap<String, String> softTotalTable;
-    private HashMap<String, String> hardTotalTable;
-    private HashMap<String, String> surrenderTable;
-
-    Scanner playerInput = new Scanner(System.in);
 
     public static void main(String[] args) throws IOException {
         basicStrategy game = new basicStrategy();
-        game.chooseDeckType();
-        game.shuffle();
-        game.playRound();
+        game.startGame();
     }
 
     public basicStrategy() {
-        clear = "\033[H\033[2J";
-        ANSI_reset = "\033[0m";
-        ANSI_green = "\033[42m";
-        ANSI_red = "\033[41m";
+        player = new Player();
+        dealer = new Dealer();
+        ref = new Referee(fileLocation);
+        printOut = new Printer();
+        deck = new Deck(fileLocation);
 
-        pairSplittingTable = new HashMap<String, String>();
-        readInfoIntoMap(pairSplittingTable, "pairSplittingTable");
-        softTotalTable = new HashMap<String, String>();
-        readInfoIntoMap(softTotalTable, "softTotalTable");
-        hardTotalTable = new HashMap<String, String>();
-        readInfoIntoMap(hardTotalTable, "hardTotalTable");
-        surrenderTable = new HashMap<String, String>();
-        readInfoIntoMap(surrenderTable, "surrenderTable");
+        playerInput = new Scanner(System.in);
 
-        alternatePlayerHands = new Stack<Hand>();
-
-        count = 0;
     }
 
-    public boolean chooseDeckType() {
-        System.out.println("1 deck can be used in casinos but usually with unfair rules");
-        System.out.println("2 deck is fairly common in casinos but sometimes has unfair rules");
-        System.out.println("6 deck is very common in casinos and usually has good rules");
-        System.out.println("Enter deck size (1,2, or 6):");
-        numDecks = playerInput.nextInt();
-        if (numDecks == 1) {
-            deckType = "oneDeck";
-        }
-        if (numDecks == 2) {
-            deckType = "twoDeck";
-        }
-        if (numDecks == 6) {
-            deckType = "sixDeck";
-        }
+    public void startGame() {
+        // Print the deck choices
+        printOut.printDeckChoices();
 
-        return false;
-    }
-
-    public void shuffle() throws IOException {
-        // isnt really a shuffle but whatever
-        deck.clear();
-        Scanner deckInput = new Scanner(
-                new File(fileLocation + "deckTypes/" + deckType + ".txt"));
-        for (int x = 1; x <= 52 * numDecks; x++) {
-            deck.add(new Card(deckInput.nextLine()));
-        }
-        deckInput.close();
+        // Create the new deck, otherwise keep asking
+        try {
+			deck.createNewDeck(Integer.parseInt(playerInput.nextLine()));
+            playRound();
+		} catch (NumberFormatException e) {
+            System.out.println("Choose a real configuration");
+            startGame();
+		} catch (IOException e) {
+			System.out.println("Choose a real configuration");
+            startGame();
+		}
     }
 
     public void deal() {
-        player = new Hand();
-        dealer = new DealerHand();
-
-        draw(player);
-        draw(dealer);
-        draw(player);
-        draw(dealer);
+        for(int x = 0; x < 2; x++) {
+            player.addCardToHand(deck.draw());
+            dealer.addCardToHand(deck.draw());
+        }
 
         player.checkIfHandCanSplit();
         dealer.checkIfHandCanSplit();
     }
 
-    public void draw(Hand input) {
-        int randomDraw = (int) (Math.floor(Math.random() * deck.size()));
-        input.addCardToHand(deck.get(randomDraw));
+    
 
-        int numValue = deck.get(randomDraw).numValue;
-
-        if (numValue > 9 || numValue == 1) {
-            count--;
-        } else if (numValue < 7) {
-            count++;
-        }
-
-        deck.remove(randomDraw);
-    }
-
-    public String choiceAccuracy(Hand playerHand, DealerHand dealerHand) {
-        if (playerHand.getCanSplit()) {
-            if (playerHand.get(0).equals("A") || playerHand.get(0).equals("8")) {
-                return "split";
-            }
-
-            if (!playerHand.get(0).equals("5") && !playerHand.getCard(0).isTen) {
-                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard().value).equals("D")) {
-                    return "split";
-                }
-
-                if (pairSplittingTable.get(playerHand.get(0) + "," + dealerHand.getVisibleCard().value).equals("Y")) {
-                    return "split";
-                }
-            }
-        }
-
-        if (!playerHand.getHandHardness()) {
-
-            nonAce = Integer.toString(playerHand.getTotal() - 11);
-
-            if (nonAce.equals("1"))
-                return "hit";
-
-            if (nonAce.equals("9") || nonAce.equals("10")) {
-                return "stand";
-            }
-
-            if (playerHand.getCanDouble()
-                    && (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("DS")
-                            || softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("D")))
-                return "double";
-
-            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("H")) {
-                return "hit";
-            }
-
-            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("S")) {
-                return "stand";
-            }
-
-            if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("D"))
-                return "hit";
-            else if (softTotalTable.get(nonAce + "," + dealerHand.getVisibleCard().value).equals("DS"))
-                return "stand";
-
-        } else {
-            if (playerHand.getTotal() >= 17) {
-                return "stand";
-            } else if (playerHand.getTotal() <= 8) {
-                return "hit";
-            }
-
-            if (playerHand.getTotal() == 11) {
-                if (player.getCanDouble()) {
-                    return "double";
-                } else {
-                    return "hit";
-                }
-            }
-
-            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("S")) {
-                return "stand";
-            }
-
-            if (playerHand.getCanSurrender() && playerHand.getTotal() <= 17 && playerHand.getTotal() >= 14) {
-                if (surrenderTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("Y")) {
-                    return "surrender";
-                }
-            }
-
-            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("H")) {
-                return "hit";
-            }
-
-            if (hardTotalTable.get(playerHand.getTotal() + "," + dealerHand.getVisibleCard().value).equals("D")) {
-                if (player.getCanDouble()) {
-                    return "double";
-                } else {
-                    return "hit";
-                }
-            }
-        }
-        return "-1";
-    }
-
-    public void readInfoIntoMap(HashMap<String, String> inputMap, String mapName) {
-        String[] inputs;
-        try {
-            File myObj = new File(
-                    fileLocation + "tables/" + mapName + ".txt");
-            Scanner myReader = new Scanner(myObj);
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
-                inputs = data.split(":");
-                inputMap.put(inputs[0], inputs[1]);
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-    }
+    
 
     String playerChoice = "null";
 
