@@ -69,9 +69,8 @@ public class Hand {
                 canHandSplit = true;
             if (numTimesSplit >= 2)
                 canHandSplit = false;
-        }
-        else 
-        canHandSplit = false;
+        } else
+            canHandSplit = false;
     }
 
     public ArrayList<Card> getHand() {

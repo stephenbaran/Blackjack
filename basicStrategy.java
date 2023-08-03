@@ -15,6 +15,10 @@ public class basicStrategy {
 
     private String deckType;
 
+    // private String fileLocation =
+    // "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/";
+    private String fileLocation = "C://Users//poken//Documents//GitHub//Blackjack/";
+
     private int numDecks;
 
     private int count;
@@ -53,7 +57,7 @@ public class basicStrategy {
         count = 0;
     }
 
-    public void chooseDeckType() {
+    public boolean chooseDeckType() {
         System.out.println("1 deck can be used in casinos but usually with unfair rules");
         System.out.println("2 deck is fairly common in casinos but sometimes has unfair rules");
         System.out.println("6 deck is very common in casinos and usually has good rules");
@@ -68,13 +72,15 @@ public class basicStrategy {
         if (numDecks == 6) {
             deckType = "sixDeck";
         }
+
+        return false;
     }
 
     public void shuffle() throws IOException {
-        //isnt really a shuffle but whatever
+        // isnt really a shuffle but whatever
         deck.clear();
         Scanner deckInput = new Scanner(
-                new File("C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/deckTypes/" + deckType + ".txt"));
+                new File(fileLocation + "deckTypes/" + deckType + ".txt"));
         for (int x = 1; x <= 52 * numDecks; x++) {
             deck.add(new Card(deckInput.nextLine()));
         }
@@ -102,11 +108,10 @@ public class basicStrategy {
 
         if (numValue > 9 || numValue == 1) {
             count--;
-        }
-        else if (numValue < 7) {
+        } else if (numValue < 7) {
             count++;
         }
-        
+
         deck.remove(randomDraw);
     }
 
@@ -200,7 +205,7 @@ public class basicStrategy {
         String[] inputs;
         try {
             File myObj = new File(
-                    "C://Users//Steph//OneDrive//Desktop//GitHub//Blackjack/tables/" + mapName + ".txt");
+                    fileLocation + "tables/" + mapName + ".txt");
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
@@ -285,9 +290,8 @@ public class basicStrategy {
                         tempHand.checkIfHandCanSplit();
 
                         alternatePlayerHands.add(tempHand);
-
-                        clearSplits();
                     }
+                    clearSplits();
                 }
 
             } else {
@@ -334,7 +338,7 @@ public class basicStrategy {
             }
         }
         System.out.println("the count is " + count);
-        
+
         if (numDecks == 2 && deck.size() < 0.4 * 52 * 2) {
             shuffle();
             count = 0;
@@ -358,7 +362,7 @@ public class basicStrategy {
     }
 
     public void playRound() {
-        //allow player to control when next hand is dealt
+        // allow player to control when next hand is dealt
         // playerInput.nextLine();
 
         this.deal();
@@ -425,26 +429,24 @@ public class basicStrategy {
 
             tempHand = alternatePlayerHands.pop();
 
-            // NEED TO CHECK FOR BLACKJACKS HERE
-
             try {
                 playerTurn(tempHand, dealer);
-
-                if (!tempHand.getIfHandWasSplit()) {
-
-                    if (tempHand.getTotal() <= 21)
-                        dealerTurn(tempHand, dealer);
-                    else
-                        printHands(tempHand, dealer, true);
-
-                    evaluateRound(tempHand, dealer);
-
-                    System.out.println("---------------------------");
-                }
-
             } catch (IOException e) {
-                System.out.println(e);
+                e.printStackTrace();
             }
+
+        }
+
+        if (!tempHand.getIfHandWasSplit()) {
+
+            if (tempHand.getTotal() <= 21)
+                dealerTurn(tempHand, dealer);
+            else
+                printHands(tempHand, dealer, true);
+
+            evaluateRound(tempHand, dealer);
+
+            System.out.println("---------------------------");
         }
 
     }
@@ -496,4 +498,3 @@ public class basicStrategy {
     }
 
 }
-
