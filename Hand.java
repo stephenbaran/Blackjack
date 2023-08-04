@@ -27,12 +27,23 @@ public class Hand {
         numTimesSplit = timesSplit;
     }
 
+    public Hand(Card[] initialCards) {
+        hand = new ArrayList<Card>();
+
+        total = 0;
+        isHandHard = true;
+        canHandSplit = false;
+        wasHandSplit = true;
+        numTimesSplit = 0;
+        canHandSurrender = true;
+
+        this.addCardToHand(initialCards[0]);
+        this.addCardToHand(initialCards[1]);
+    }
+
     public void splitHand() {
         wasHandSplit = true;
-
-        if (this.getCard(0).isAce) {
-            hand.get(1).upgradeAce();
-        }
+        hand.remove(1);
     }
 
     public boolean getIfHandWasSplit() {
@@ -113,10 +124,6 @@ public class Hand {
 
     public int getTotal() {
         return total;
-    }
-
-    public void clearHand() {
-        hand.clear();
     }
 
     public String get(int pos) {

@@ -17,9 +17,10 @@ public class Card {
         } else if (value.equals("A")) {
             isAce = true;
             numValue = 11;
-        } else
+        } else {
             numValue = Integer.parseInt(input);
-        
+        }
+
     }
 
     public void downgradeAce() {

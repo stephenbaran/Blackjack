@@ -22,14 +22,16 @@ public class Deck {
         shuffle();
     }
 
+    Scanner deckInput;
+
     public void shuffle() throws IOException {
         deck.clear();
-        Scanner deckInput = new Scanner(
-                new File(fileLocation + "deckTypes/oneDeck.txt"));
 
-        for(int y = 0; y < numDecks; y++) {
-            for (int x = 1; x <= 52 ; x++) {
-                deck.add(new Card(deckInput.nextLine()));
+        for (int y = 0; y < numDecks; y++) {
+            deckInput = new Scanner(
+                    new File(fileLocation + "deckTypes/oneDeck.txt"));
+            for (int x = 0; x < 52; x++) {
+                deck.add(new Card(deckInput.nextLine().substring(0, 1)));
             }
         }
 
@@ -48,8 +50,23 @@ public class Deck {
         } else if (tempCard.numValue < 7) {
             count++;
         }
-        
+
         return tempCard;
     }
 
+    public int getCount() {
+        return count;
+    }
+
+    public void resetCount() {
+        count = 0;
+    }
+
+    public void printCount() {
+        System.out.println("Count " + count);
+    }
+
+    public int size() {
+        return deck.size();
+    }
 }

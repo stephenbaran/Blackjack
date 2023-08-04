@@ -1,6 +1,6 @@
 public class Competitor {
 
-    private Hand hand;
+    protected Hand hand;
 
     public Competitor(Hand input) {
         hand = input;
@@ -17,4 +17,13 @@ public class Competitor {
     public Hand getHand() {
         return hand;
     }
+
+    public int getTotal() {
+        return hand.getTotal();
+    }
+
+    public void clearHand() {
+        hand = new Hand();
+    }
+
 }
